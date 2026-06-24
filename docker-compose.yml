@@ -1,0 +1,57 @@
+# Base stack — identical local (WSL2) and on the remote server.
+# What differs between environments lives entirely in .env.
+# On the server, layer docker-compose.prod.yml on top to add the Caddy
+# reverse proxy + automatic HTTPS (see README).
+
+services:
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:${N8N_VERSION:-latest}
+    restart: unless-stopped
+    ports:
+      # Bound to loopback only. From Windows, http://localhost:5678 works
+      # because WSL2 forwards localhost. On the server this stays private and
+      # Caddy reaches n8n over the internal compose network, not this port.
+      # Change to "5678:5678" if you need LAN access via the WSL IP.
+      - "127.0.0.1:5678:5678"
+    environment:
+      - N8N_HOST=${N8N_HOST:-localhost}
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=${N8N_PROTOCOL:-http}
+      - N8N_EDITOR_BASE_URL=${N8N_EDITOR_BASE_URL:-http://localhost:5678}
+      - WEBHOOK_URL=${WEBHOOK_URL:-http://localhost:5678}
+      - N8N_SECURE_COOKIE=${N8N_SECURE_COOKIE:-false}
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY:?set N8N_ENCRYPTION_KEY in .env}
+      - GENERIC_TIMEZONE=${GENERIC_TIMEZONE:-UTC}
+      - TZ=${GENERIC_TIMEZONE:-UTC}
+      - N8N_RUNNERS_ENABLED=true
+      # Persisted data lives in Postgres, not SQLite.
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=${POSTGRES_DB:-n8n}
+      - DB_POSTGRESDB_USER=${POSTGRES_USER:-n8n}
+      - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    volumes:
+      - n8n_data:/home/node/.n8n
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-n8n}
+      - POSTGRES_USER=${POSTGRES_USER:-n8n}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-n8n} -d ${POSTGRES_DB:-n8n}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  n8n_data:
+  postgres_data:

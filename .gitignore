@@ -11,6 +11,7 @@ build/
 wheels/
 *.whl
 MANIFEST
+.python-version
 
 # Virtual environments
 .venv/
@@ -39,23 +40,89 @@ htmlcov/
 .env.*
 !.env.example
 
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.npm
+.pnp.*
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+
+# n8n
+.n8n/
+n8n-data/
+
+# Build output
+.next/
+.nuxt/
+.output/
+.cache/
+.parcel-cache/
+out/
+
+# Docker
+.dockerignore
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
+*.sublime-project
+*.sublime-workspace
 
 # OS
 .DS_Store
 Thumbs.db
 desktop.ini
+ehthumbs.db
+Icon?
 
 # Logs
 *.log
 logs/
+pip-log.txt
+pip-delete-this-directory.txt
 
 # Secrets
 *.pem
 *.key
 *.cert
+*.p12
+*.pfx
+secrets/
+credentials/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+.terraform.lock.hcl
+
+# Compiled binaries
+*.exe
+*.dll
+*.dylib
+
+# Archives
+*.zip
+*.tar.gz
+*.tgz
+*.rar
+
+# SQLite
+*.sqlite
+*.sqlite3
+*.db

@@ -1,0 +1,29 @@
+# Server-only overlay: adds Caddy for automatic HTTPS (Let's Encrypt).
+# Usage on the server:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# Caddy talks to n8n over the internal compose network (n8n:5678), so the
+# base stack's 127.0.0.1:5678 host port is never exposed publicly.
+# Requires: a DNS A record pointing your domain at the server, and ports
+# 80 + 443 open in the firewall / cloud security group.
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - N8N_DOMAIN=${N8N_DOMAIN:?set N8N_DOMAIN in .env}
+      - ACME_EMAIL=${ACME_EMAIL:?set ACME_EMAIL in .env}
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - n8n
+
+volumes:
+  caddy_data:
+  caddy_config:
